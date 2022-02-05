@@ -1,10 +1,9 @@
 package frc.robot;
 
-import frc.robot.Vision.RedHalfPipeline;
+import frc.robot.Vision.GripRedPipeline;
 
 import org.opencv.core.Rect;
 import org.opencv.imgproc.Imgproc;
-import java.util.concurrent.TimeUnit;
 
 import edu.wpi.first.cscore.UsbCamera;
 import edu.wpi.first.cameraserver.CameraServer;
@@ -31,37 +30,21 @@ public class VisionTest extends TimedRobot {
     private VisionThread visionThread;
     private double centerX = 0.0;
     private final Object imgLock = new Object();
-    private final MotorController m_frontLeft = new WPI_TalonSRX(1);
-    private final MotorController m_rearLeft = new WPI_TalonSRX(3);
-    private final MotorControllerGroup m_left = new MotorControllerGroup(m_frontLeft, m_rearLeft);
 
-    private final MotorController m_frontRight = new WPI_TalonSRX(2);
-    private final MotorController m_rearRight = new WPI_TalonSRX(4);
-    private final MotorControllerGroup m_right = new MotorControllerGroup(m_frontRight, m_rearRight);
-
-    private final DifferentialDrive m_drive = new DifferentialDrive(m_left, m_right);
     
 
 @Override
 public void robotInit() {
     UsbCamera camera = CameraServer.startAutomaticCapture();
     camera.setResolution(IMG_WIDTH, IMG_HEIGHT);
-    m_frontRight.setInverted(true);
-    m_rearRight.setInverted(true);
 
-    visionThread = new VisionThread(camera, new RedHalfPipeline(), pipeline -> {
+    visionThread = new VisionThread(camera, new GripRedPipeline(), pipeline -> {
         if (!pipeline.filterContoursOutput().isEmpty()) {
             Rect r = Imgproc.boundingRect(pipeline.filterContoursOutput().get(0));
             synchronized (imgLock) {
                 centerX = r.x + (r.width / 2);
             }
         }
-        else{
-            synchronized (imgLock) {
-                centerX = 0;
-            }
-        }
-        
     });
     visionThread.start();
 }
@@ -72,27 +55,16 @@ public void autonomousPeriodic() {
     synchronized (imgLock) {
         centerX = this.centerX;
     }
+    MotorController m_frontLeft = new WPI_TalonSRX(2);
+    MotorController m_rearLeft = new WPI_TalonSRX(3);
+    MotorControllerGroup m_left = new MotorControllerGroup(m_frontLeft, m_rearLeft);
 
+    MotorController m_frontRight = new WPI_TalonSRX(1);
+    MotorController m_rearRight = new WPI_TalonSRX(0);
+    MotorControllerGroup m_right = new MotorControllerGroup(m_frontRight, m_rearRight);
+
+    DifferentialDrive m_drive = new DifferentialDrive(m_left, m_right);
     double turn = centerX - (IMG_WIDTH / 2);
-    String s=String.valueOf(turn);  
-    String x=String.valueOf(centerX); 
-    System.out.print("Turn value is" + s);
-    System.out.print("X value is" + x);
-    if (centerX == 0){
-        m_drive.arcadeDrive(0, 0);
-    }
-    else if(centerX <= 170 && centerX >= 150){
-        m_drive.arcadeDrive(0.6, 0);
-    }
-    else{
-        m_drive.arcadeDrive(0.6, turn * 0.005);
-    }
-    
-    try {
-        Thread.sleep(100);
-    } catch (InterruptedException e) {
-        // TODO Auto-generated catch block
-        e.printStackTrace();
-    }
-    }
+    m_drive.arcadeDrive(-0.6, turn * 0.005);
+}
 }

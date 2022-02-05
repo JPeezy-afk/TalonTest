@@ -21,6 +21,7 @@ import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.DemandType;
 import com.ctre.phoenix.motorcontrol.can.TalonSRX;
 import com.ctre.phoenix.motorcontrol.can.VictorSPX;
+import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
 
 public class VisionTest extends TimedRobot {
 
@@ -28,8 +29,6 @@ public class VisionTest extends TimedRobot {
     private static final int IMG_HEIGHT = 240;
     private VisionThread visionThread;
     private double centerX = 0.0;
-    private DifferentialDrive drive;
-
     private final Object imgLock = new Object();
 
     
@@ -56,12 +55,12 @@ public void autonomousPeriodic() {
     synchronized (imgLock) {
         centerX = this.centerX;
     }
-    MotorController m_frontLeft = new PWMVictorSPX(2);
-    MotorController m_rearLeft = new PWMVictorSPX(3);
+    MotorController m_frontLeft = new WPI_TalonSRX(1);
+    MotorController m_rearLeft = new WPI_TalonSRX(3);
     MotorControllerGroup m_left = new MotorControllerGroup(m_frontLeft, m_rearLeft);
 
-    MotorController m_frontRight = new PWMVictorSPX(1);
-    MotorController m_rearRight = new PWMVictorSPX(0);
+    MotorController m_frontRight = new WPI_TalonSRX(2);
+    MotorController m_rearRight = new WPI_TalonSRX(4);
     MotorControllerGroup m_right = new MotorControllerGroup(m_frontRight, m_rearRight);
 
     DifferentialDrive m_drive = new DifferentialDrive(m_left, m_right);
